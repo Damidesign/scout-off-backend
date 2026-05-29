@@ -18,3 +18,15 @@ export async function getLatestLedger(): Promise<number> {
   const ledger = await server.getLatestLedger();
   return ledger.sequence;
 }
+
+/**
+ * Health check: returns true if the Soroban RPC is reachable.
+ */
+export async function stellarHealth(): Promise<boolean> {
+  try {
+    await server.getLatestLedger();
+    return true;
+  } catch {
+    return false;
+  }
+}
