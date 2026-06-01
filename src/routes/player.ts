@@ -4,10 +4,14 @@ import {
   getPlayer,
   filterPlayers,
   getPlayerMilestones,
+  updatePlayer,
   registerSchema,
   filterSchema,
+  updatePlayerSchema,
 } from '../controllers/playerController';
 import { validateBody, validateQuery } from '../middleware/validate';
+import { requireAuth } from '../middleware/auth';
+import { requireOwner } from '../middleware/requireOwner';
 
 const router = Router();
 
@@ -24,32 +28,11 @@ const router = Router();
  * @auth none
  */
 router.get('/', validateQuery(filterSchema), filterPlayers);
-
-/**
- * POST /api/players/register
- *
- * Pins player metadata to IPFS via Pinata and returns the content identifier (CID).
- * The CID should be passed to the Soroban register_player contract function.
- *
- * @body position {string} - Playing position
- * @body region {string} - Player's region
- * @body metadata {object} - Additional profile metadata
- * @response 200 { success: true, data: { cid: string } }
- * @response 400 { success: false, error: string } - Validation failure
- * @auth none
- */
-router.post('/register', validateBody(registerSchema), registerPlayer);
-
-/**
- * GET /api/players/:playerId
- *
- * Returns a single player profile by their on-chain player ID.
- *
- * @param playerId {string} - On-chain player identifier
- * @response 200 { success: true, data: Player }
- * @response 404 { success: false, error: string } - Player not found
- * @auth none
- */
+router.post(
+  '/register',
+  validateBody(registerSchema, { context: 'player_registration' }),
+  registerPlayer
+);
 router.get('/:playerId', getPlayer);
 
 /**
@@ -63,5 +46,7 @@ router.get('/:playerId', getPlayer);
  * @auth none
  */
 router.get('/:playerId/milestones', getPlayerMilestones);
+// Profile owner only — requireAuth sets req.account; requireOwner checks it matches :playerId
+router.put('/:playerId', requireAuth, requireOwner, validateBody(updatePlayerSchema), updatePlayer);
 
 export default router;
