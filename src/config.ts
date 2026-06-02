@@ -33,6 +33,7 @@ function required(name: string): string {
 }
 
 const config = {
+  nodeEnv,
   port: parseInt(process.env.PORT ?? '4000', 10),
   network: (process.env.NETWORK ?? 'testnet') as 'testnet' | 'mainnet',
   networkPassphrase:
