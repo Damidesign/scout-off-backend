@@ -60,10 +60,14 @@ export function extractAccount(xdr: string): string | null {
  * This implements SEP-10 authentication by:
  * 1. Validating the challenge transaction structure
  * 2. Cryptographically verifying the client's signature using Keypair.verify()
- * 3. Issuing a JWT if all checks pass
+ * 3. Issuing a JWT with client account and role claim
+ *
+ * Note: The role parameter is expected to be pre-validated by the caller.
+ * Role enforcement (e.g., enum validation) is handled in the auth controller.
+ * Authorized routes use requireRole() or requireRoles() middleware to enforce access.
  *
  * @param xdr - The signed challenge transaction in XDR format
- * @param role - Optional role claim for the JWT (defaults to 'player')
+ * @param role - Optional role claim for the JWT (defaults to 'player'). Must be validated by caller.
  * @returns JWT token and authenticated account ID
  * @throws Error if challenge structure is invalid or signature verification fails
  */
