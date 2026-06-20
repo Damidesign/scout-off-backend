@@ -1,6 +1,6 @@
 #![no_std]
 
-use soroban_sdk::{contract, contractimpl, contracttype, Address, Env};
+use soroban_sdk::{contract, contractimpl, contracttype, token, Address, Env, Symbol};
 use scout_off_shared::{
     errors::Error,
     storage::{bump_instance, is_initialized, set_initialized},
@@ -21,7 +21,7 @@ pub struct SubscriptionContract;
 
 #[contractimpl]
 impl SubscriptionContract {
-    /// One-time setup. Stores the admin address and marks the contract initialized.
+    /// One-time setup. Stores admin, payment token, and platform contact fee.
     pub fn initialize(
         env: Env,
         admin: Address,
@@ -43,6 +43,10 @@ impl SubscriptionContract {
     }
 
     /// Purchase a scout subscription for the given tier and duration (in ledgers).
+    ///
+    /// Required payment = tier × duration_ledgers × platform_fee_bps.
+    /// Returns `InsufficientFee(7)` when the scout's balance is too low,
+    /// or `Overflow(11)` when cost computation overflows i128.
     pub fn subscribe(
         env: Env,
         scout: Address,
@@ -75,7 +79,7 @@ impl SubscriptionContract {
         Ok(())
     }
 
-    /// Check whether a scout has an active subscription.
+    /// Return true if the scout has an active (non-expired) subscription.
     pub fn is_subscribed(env: Env, scout: Address) -> bool {
         let expiry: u32 = match env
             .storage()
